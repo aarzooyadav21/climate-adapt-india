@@ -35,6 +35,8 @@ from routes.lab import router as lab_router
 from routes.farmer import router as farmer_router
 from routes.policymaker import router as policymaker_router
 from routes.districts import router as districts_router
+from routes.hazards import router as hazards_router
+from routes.bulletin import router as bulletin_router
 
 
 @asynccontextmanager
@@ -91,6 +93,8 @@ api.include_router(lab_router)
 api.include_router(farmer_router)
 api.include_router(policymaker_router)
 api.include_router(districts_router)
+api.include_router(hazards_router)
+api.include_router(bulletin_router)
 
 app.include_router(api)
 
