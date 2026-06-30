@@ -1,26 +1,26 @@
 [
   {
-    "content": "Phase 8a: India state GeoJSON polygons + choropleth rendering on map",
+    "content": "Phase 9a: Backend /api/climate/grid endpoint for continuous heatmap data",
     "status": "completed"
   },
   {
-    "content": "Phase 8b: Persistent saved scenarios (save / list / delete per user)",
+    "content": "Phase 9b: Frontend continuous heatmap canvas overlay (IDW interpolated, clipped to India)",
     "status": "completed"
   },
   {
-    "content": "Phase 8c: CSV/JSON data export endpoints + UI buttons on charts/tables",
+    "content": "Phase 9c: Hover-anywhere cursor inspector (coords + interpolated value + nearest place)",
     "status": "completed"
   },
   {
-    "content": "Phase 8d: Testing - 15/15 backend + 10/10 frontend (after fix) PASSED",
+    "content": "Phase 9d: AI grounding hardening - strict no-hallucination + richer context + citations",
     "status": "completed"
   },
   {
-    "content": "Phase 9: District-level resolution - deferred (would require ~700 district GeoJSON + heavy parallel API calls; recommend separate phase)",
-    "status": "pending"
+    "content": "Phase 9e: Scientist Lab - multi-variable experiments + comparison + sensitivity",
+    "status": "completed"
   },
   {
-    "content": "Phase 10: Deployment - await user trigger",
-    "status": "pending"
+    "content": "Phase 9f: Testing all new features end-to-end via testing_agent_v3",
+    "status": "in_progress"
   }
 ]

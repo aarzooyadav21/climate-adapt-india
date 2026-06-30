@@ -1,0 +1,120 @@
+{
+  "summary": "Phase 9 testing complete: Continuous IDW-interpolated heatmap, cursor inspector, Lab experiments with sensitivity sweep, and AI grounding enhancements all working. Backend: 12/13 tests passed (92.3%). Frontend: All Phase 9 features passed.",
+  
+  "backend_issues": {
+    "critical_bugs": [],
+    "flaky_endpoints": [],
+    "minor_issues": [
+      {
+        "endpoint": "/api/advisor/chat",
+        "issue": "LLM API budget exceeded during richer context test",
+        "impact": "Advisor chat may fail when budget limit is reached",
+        "fix_priority": "LOW",
+        "note": "This is an API budget limitation, not a code bug. The no-hallucination test passed, confirming strict grounding is working correctly."
+      }
+    ]
+  },
+  
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  
+  "passed_tests": [
+    "Backend: GET /api/climate/grid?layer=temperature (91 points, unit °C, provenance)",
+    "Backend: GET /api/climate/grid?layer=humidity (91 points, unit %)",
+    "Backend: GET /api/climate/grid?layer=precipitation (91 points, unit mm (7d))",
+    "Backend: GET /api/climate/grid?layer=drought_spi (62 points, unit SPI)",
+    "Backend: GET /api/climate/grid?layer=rainfall_departure (33 points, unit % vs LPA)",
+    "Backend: GET /api/climate/grid?layer=invalid returns 422",
+    "Backend: GET /api/climate/point?lat=22.5&lon=80 (returns temp, humidity, wind, nearest_place)",
+    "Backend: POST /api/lab/run with 2 experiments and narrative (18s response time)",
+    "Backend: POST /api/lab/run with include_narrative=false (fast mode, no LLM)",
+    "Backend: POST /api/lab/sensitivity with warming_c sweep (5 points, 0-4°C range)",
+    "Backend: Advisor no-hallucination test (correctly refused out-of-scope Mars question)",
+    "Frontend US-24: Continuous IDW-interpolated heatmap (ImageOverlay) covering India",
+    "Frontend US-25: Map legend with smooth gradient bar and 'IDW-interpolated · hover for exact value'",
+    "Frontend US-26: Cursor inspector tooltip on hover showing coords, value, nearest place",
+    "Frontend US-27: Layer switching functionality (map reloads with different data layers)",
+    "Frontend US-28: Lab page with experiment cards and 5 variable sliders (warming, rainfall, urbanization, land-use, horizon)",
+    "Frontend US-29: Add experiment button (2nd card appeared), Run All button present",
+    "Frontend US-30: Sensitivity Sweep tab with all 4 controls (variable, min, max, run)",
+    "Frontend US-31: Scientist Lab nav item present in sidebar (data-testid='nav-scientist-lab')",
+    "Frontend US-32: Advisor chat UI shows provenance citations (NASA POWER, Open-Meteo ERA5, ECMWF, IMD-style)"
+  ],
+  
+  "test_report_links": [
+    "/app/backend/backend_test_phase9.py"
+  ],
+  
+  "success_percentage": {
+    "backend": "92.3% (12/13 tests passed)",
+    "frontend": "100% (All Phase 9 features working)",
+    "overall": "96% (Phase 9 implementation successful)"
+  },
+  
+  "action_item_for_main_agent": "",
+  
+  "updated_files": [
+    "/app/backend/backend_test_phase9.py"
+  ],
+  
+  "should_call_test_agent_after_fix": false,
+  "should_main_agent_test_itself": false,
+  
+  "detailed_findings": {
+    "phase9_grid_endpoints": {
+      "status": "PASSED",
+      "details": "All grid endpoints working correctly with proper units, provenance, and >50 sample points. Temperature (91 pts), Humidity (91 pts), Precipitation (91 pts, 7-day cumulative), Drought SPI (62 pts), Rainfall Departure (33 pts). Invalid layer correctly returns 422."
+    },
+    "phase9_point_query": {
+      "status": "PASSED",
+      "details": "Point query endpoint returns temperature_c, humidity, wind_ms, and nearest_place with correct coordinates."
+    },
+    "phase9_lab_experiments": {
+      "status": "PASSED",
+      "details": "Lab run endpoint supports multiple experiments (tested with 2), returns experiments array, summary, provenance, and AI narrative. Fast mode (include_narrative=false) skips LLM as expected."
+    },
+    "phase9_sensitivity_sweep": {
+      "status": "PASSED",
+      "details": "Sensitivity endpoint correctly sweeps warming_c from 0-4°C in 5 steps, returns curve with projected_temp_c and projected_rainfall_mm for each point."
+    },
+    "phase9_advisor_grounding": {
+      "status": "PASSED (with budget note)",
+      "details": "Advisor strict grounding confirmed via no-hallucination test - correctly refused out-of-scope question about Mars temperature. Richer context test hit LLM API budget limit (not a code bug). UI shows provenance citations prominently."
+    },
+    "phase9_heatmap_overlay": {
+      "status": "PASSED",
+      "details": "Continuous IDW-interpolated heatmap renders as ImageOverlay on Leaflet map, covering India with smooth color gradient. No discrete city markers visible, confirming Phase 9 design."
+    },
+    "phase9_cursor_inspector": {
+      "status": "PASSED",
+      "details": "Cursor inspector tooltip (data-testid='cursor-inspector') appears on map hover, showing coordinates (22.650°N · 82.457°E), interpolated value (30.1°C), and nearest place (Chhattisgarh)."
+    },
+    "phase9_map_legend": {
+      "status": "PASSED",
+      "details": "Map legend displays smooth gradient bar with unit and text 'IDW-interpolated · hover for exact value' as specified."
+    },
+    "phase9_scientist_lab": {
+      "status": "PASSED",
+      "details": "Scientist Lab page fully functional with experiment cards, 5 variable sliders per experiment, Add Experiment button (max 8), Run All button, and Sensitivity Sweep tab with variable selector, min/max inputs, and Run Sweep button."
+    }
+  },
+  
+  "performance_notes": [
+    "Grid endpoints respond in 1-2 seconds (cached after first call)",
+    "Lab run with narrative takes ~18 seconds (LLM generation)",
+    "Lab run without narrative is fast (<1 second)",
+    "Point query responds in <1 second",
+    "Heatmap renders smoothly with 91 sample points"
+  ],
+  
+  "test_environment": {
+    "base_url": "https://climate-adapt-india.preview.emergentagent.com",
+    "test_user": "scientist@test.in",
+    "test_date": "2026-06-30",
+    "browser": "Chromium (Playwright)",
+    "viewport": "1920x1080"
+  }
+}

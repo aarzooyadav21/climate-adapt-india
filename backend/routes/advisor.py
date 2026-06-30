@@ -33,22 +33,42 @@ def build_advisor_router(db: AsyncIOMotorDatabase) -> APIRouter:
     @router.post("/chat", response_model=AdvisorResponse)
     async def chat(body: AdvisorRequest, user=Depends(get_optional_user)):
         session_id = body.session_id or f"adv-{uuid.uuid4().hex[:12]}"
-        # Build context from selected location
-        context: Dict[str, Any] = {}
+        # Build RICH context for grounding
+        context: Dict[str, Any] = {"data_certainty": "high"}
         if body.state_code:
             st = state_by_code(body.state_code.upper())
             if st:
-                context["location"] = {"state": st["name"], "code": st["code"], "lat": st["lat"], "lon": st["lon"]}
-                snap = await climate_service.snapshot(st["lat"], st["lon"])
-                context["current_snapshot"] = snap["current"]
-                context["climatology_30d"] = snap["climatology_30d"]
-                context["provenance"] = snap["provenance"]
+                context["location"] = {"state": st["name"], "code": st["code"], "lat": st["lat"], "lon": st["lon"], "zone": st["zone"], "capital": st.get("capital")}
+                # Parallel-fetch: snapshot + forecast + drought + monsoon state value
+                from services.climate_service import climate_service as cs
+                import asyncio as _a
+                snap_t, era5_t = await _a.gather(
+                    cs.snapshot(st["lat"], st["lon"]),
+                    cs.fetch_era5_reanalysis(st["lat"], st["lon"], days=90),
+                )
+                context["current_snapshot"] = snap_t["current"]
+                context["climatology_30d"] = snap_t["climatology_30d"]
+                context["forecast_daily_7d"] = {k: (v[:7] if isinstance(v, list) else v) for k, v in (snap_t.get("forecast_daily") or {}).items()}
+                era_daily = era5_t.get("daily") or {}
+                if era_daily.get("precipitation_sum"):
+                    p90 = era_daily["precipitation_sum"][-90:]
+                    context["era5_last_90d"] = {
+                        "precipitation_total_mm": round(sum(v or 0 for v in p90), 1),
+                        "days_covered": len(p90),
+                        "avg_tmax_c": round(sum((era_daily.get("temperature_2m_max") or [0])[-90:]) / max(len(p90),1), 2),
+                    }
+                context["provenance"] = snap_t["provenance"]
+                context["data_certainty"] = "high"
         elif body.lat is not None and body.lon is not None:
             snap = await climate_service.snapshot(body.lat, body.lon)
             context["location"] = {"lat": body.lat, "lon": body.lon}
             context["current_snapshot"] = snap["current"]
             context["climatology_30d"] = snap["climatology_30d"]
             context["provenance"] = snap["provenance"]
+            context["data_certainty"] = "medium"
+        else:
+            context["data_certainty"] = "low"
+            context["note"] = "No location selected. Ask user to select a state/region for grounded analysis."
 
         try:
             reply = await AdvisorChat.reply(session_id, body.message, context)

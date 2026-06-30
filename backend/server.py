@@ -30,6 +30,8 @@ from routes.advisor import build_advisor_router
 from routes.geo import router as geo_router
 from routes.saved import build_saved_router
 from routes.export import router as export_router
+from routes.grid import router as grid_router
+from routes.lab import router as lab_router
 
 
 @asynccontextmanager
@@ -81,6 +83,8 @@ api.include_router(build_advisor_router(db))
 api.include_router(geo_router)
 api.include_router(build_saved_router(db))
 api.include_router(export_router)
+api.include_router(grid_router)
+api.include_router(lab_router)
 
 app.include_router(api)
 

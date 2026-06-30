@@ -2,7 +2,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { Outlet } from "react-router-dom";
 import {
   Activity, CloudRain, Flame, Droplets, FlaskConical, Bot,
-  Sprout, Building2, Sun, LogOut, Satellite, Wind, Layers3,
+  Sprout, Building2, Sun, LogOut, Satellite, Wind, Layers3, Beaker,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { MissionClock } from "@/components/MissionClock";
@@ -16,6 +16,7 @@ const NAV = [
   { to: "/app/extremes",        label: "Extreme Weather", icon: Flame },
   { to: "/app/drought",         label: "Drought Monitor", icon: Droplets },
   { to: "/app/scenarios",       label: "Scenario Simulator", icon: FlaskConical },
+  { to: "/app/lab",             label: "Scientist Lab",     icon: Beaker },
   { to: "/app/sectors/agriculture", label: "Agriculture",   icon: Sprout },
   { to: "/app/sectors/water",   label: "Water Resources",  icon: Wind },
   { to: "/app/sectors/urban",   label: "Urban Heat",       icon: Building2 },

@@ -16,6 +16,7 @@ import Drought from "@/pages/Drought";
 import Scenarios from "@/pages/Scenarios";
 import SectorPage from "@/pages/Sectors";
 import Advisor from "@/pages/Advisor";
+import Lab from "@/pages/Lab";
 
 const Protected = ({ children }) => {
   const { user, loading } = useAuth();
@@ -52,6 +53,7 @@ function App() {
                 <Route path="/app/drought" element={<Drought />} />
                 <Route path="/app/scenarios" element={<Scenarios />} />
                 <Route path="/app/sectors/:sector" element={<SectorPage />} />
+                <Route path="/app/lab" element={<Lab />} />
                 <Route path="/app/advisor" element={<Advisor />} />
               </Route>
               <Route path="*" element={<Navigate to="/" replace />} />
