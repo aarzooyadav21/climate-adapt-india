@@ -19,6 +19,9 @@ import Advisor from "@/pages/Advisor";
 import Lab from "@/pages/Lab";
 import FarmerHome from "@/pages/FarmerHome";
 import PolicymakerHome from "@/pages/PolicymakerHome";
+import FireRisk from "@/pages/FireRisk";
+import Cyclone from "@/pages/Cyclone";
+import Bulletin from "@/pages/Bulletin";
 
 const Protected = ({ children }) => {
   const { user, loading } = useAuth();
@@ -37,9 +40,9 @@ function RoleHome() {
 
 // Restrict pages by role (farmers don't see Lab/Scenarios/Drought etc.)
 const ROLE_ACCESS = {
-  scientist: new Set(["dashboard", "monsoon", "extremes", "drought", "scenarios", "lab", "sectors", "advisor"]),
-  policymaker: new Set(["dashboard", "monsoon", "extremes", "drought", "scenarios", "sectors", "advisor"]),
-  farmer: new Set(["sectors-agriculture", "advisor"]),
+  scientist: new Set(["dashboard", "monsoon", "extremes", "drought", "scenarios", "lab", "sectors", "advisor", "fire", "cyclone", "bulletin"]),
+  policymaker: new Set(["dashboard", "monsoon", "extremes", "drought", "scenarios", "sectors", "advisor", "fire", "cyclone", "bulletin"]),
+  farmer: new Set(["sectors-agriculture", "advisor", "bulletin"]),
 };
 
 function RoleGate({ moduleKey, children }) {
@@ -78,6 +81,9 @@ function App() {
                 <Route path="/app/scenarios" element={<RoleGate moduleKey="scenarios"><Scenarios /></RoleGate>} />
                 <Route path="/app/sectors/:sector" element={<SectorPage />} />
                 <Route path="/app/lab" element={<RoleGate moduleKey="lab"><Lab /></RoleGate>} />
+                <Route path="/app/hazards/fire" element={<RoleGate moduleKey="fire"><FireRisk /></RoleGate>} />
+                <Route path="/app/hazards/cyclone" element={<RoleGate moduleKey="cyclone"><Cyclone /></RoleGate>} />
+                <Route path="/app/bulletin" element={<RoleGate moduleKey="bulletin"><Bulletin /></RoleGate>} />
                 <Route path="/app/advisor" element={<Advisor />} />
               </Route>
               <Route path="*" element={<Navigate to="/" replace />} />

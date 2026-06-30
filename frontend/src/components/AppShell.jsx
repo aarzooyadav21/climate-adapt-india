@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom";
 import {
   Activity, CloudRain, Flame, Droplets, FlaskConical, Bot,
   Sprout, Building2, Sun, LogOut, Satellite, Wind, Layers3, Beaker,
+  Waves, FileText,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { MissionClock } from "@/components/MissionClock";
@@ -17,6 +18,9 @@ const NAV_ALL = [
   { to: "/app/drought",         label: "Drought Monitor",     icon: Droplets, roles: ["scientist", "policymaker"] },
   { to: "/app/scenarios",       label: "Scenario Simulator",  icon: FlaskConical, roles: ["scientist", "policymaker"] },
   { to: "/app/lab",             label: "Scientist Lab",       icon: Beaker, roles: ["scientist"] },
+  { to: "/app/hazards/fire",    label: "Forest Fire Risk",    icon: Flame, roles: ["scientist", "policymaker"] },
+  { to: "/app/hazards/cyclone", label: "Cyclone Watch",       icon: Waves, roles: ["scientist", "policymaker"] },
+  { to: "/app/bulletin",        label: "Daily AI Bulletin",   icon: FileText, roles: ["scientist", "policymaker", "farmer"] },
   { to: "/app/sectors/agriculture", label: "Agriculture",     icon: Sprout, roles: ["scientist", "policymaker", "farmer"] },
   { to: "/app/sectors/water",   label: "Water Resources",     icon: Wind, roles: ["scientist", "policymaker"] },
   { to: "/app/sectors/urban",   label: "Urban Heat",          icon: Building2, roles: ["scientist", "policymaker"] },
