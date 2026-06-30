@@ -1,5 +1,6 @@
 """Daily climate bulletin generator — AI-tailored per role."""
 import asyncio
+import time
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 
@@ -11,6 +12,10 @@ from services.auth_service import get_current_user
 from data.india_states import state_by_code
 
 router = APIRouter(prefix="/bulletin", tags=["bulletin"])
+
+# In-memory TTL cache: { (state_code, role): (expires_ts, payload) }
+_BULLETIN_CACHE: dict = {}
+_TTL_SECONDS = 30 * 60  # 30-minute cache per (state, role)
 
 ROLE_SYSTEMS = {
     "farmer": (
@@ -42,23 +47,27 @@ async def bulletin(
     if not st:
         raise HTTPException(404, "State not found")
 
+    # Serve from cache if fresh
+    cache_key = (st["code"], use_role)
+    now = time.time()
+    cached = _BULLETIN_CACHE.get(cache_key)
+    if cached and cached[0] > now:
+        return cached[1]
+
     from routes.monsoon import monsoon_status
     from routes.extremes import drought_index, extreme_alerts
-    from routes.hazards import fire_risk_index, cyclone_watch
 
-    snap, mon, drought, alerts, fire, cyc = await asyncio.gather(
+    # Lightweight context: only fast/cached endpoints. Skip fire/cyclone fan-out
+    # which iterates all states and previously caused proxy timeouts.
+    snap, mon, drought, alerts = await asyncio.gather(
         climate_service.snapshot(st["lat"], st["lon"]),
         monsoon_status(),
         drought_index(),
         extreme_alerts(),
-        fire_risk_index(),
-        cyclone_watch(),
     )
     st_mon = next((s for s in mon["state_summaries"] if s["code"] == st["code"]), None)
     st_drought = next((s for s in drought["states"] if s["code"] == st["code"]), None)
     st_alerts = next((s for s in alerts["states"] if s["code"] == st["code"]), None)
-    st_fire = next((s for s in fire["states"] if s["code"] == st["code"]), None)
-    st_cyc = next((s for s in cyc["coastal_states"] if s["code"] == st["code"]), None)
 
     ctx = {
         "state": st["name"], "date_ist": datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=5, minutes=30))).strftime("%Y-%m-%d"),
@@ -67,8 +76,6 @@ async def bulletin(
         "monsoon": {"national_departure_pct": mon["national_departure_pct"], "phase": mon["phase"], "state": st_mon},
         "drought_state": st_drought, "drought_national_at_risk": drought["count_at_risk"],
         "extremes_state": st_alerts, "extremes_national_with_alerts": alerts["states_with_alerts"],
-        "fire_risk_state": st_fire, "fire_risk_national_at_risk": fire["count_at_risk"],
-        "cyclone_watch_state": st_cyc, "cyclone_active_watches": len(cyc["active_watches"]),
     }
 
     chat = LlmChat(api_key=_key(), session_id=f"bulletin-{use_role}-{st['code']}", system_message=ROLE_SYSTEMS[use_role]
@@ -85,7 +92,7 @@ async def bulletin(
     except Exception as e:
         raise HTTPException(500, f"Bulletin generation failed: {e}")
 
-    return {
+    result = {
         "role": use_role, "state": st, "date_ist": ctx["date_ist"],
         "bulletin_text": text,
         "context_summary": {k: bool(v) for k, v in ctx.items()},
@@ -94,6 +101,7 @@ async def bulletin(
             {"source": "Open-Meteo", "dataset": "ECMWF/IFS"},
             {"source": "Open-Meteo ERA5", "dataset": "ECMWF ERA5"},
             {"source": "IMD-style", "dataset": "State LPA climatology"},
-            {"source": "Derived FWI-lite", "dataset": "Fire risk"},
         ],
     }
+    _BULLETIN_CACHE[cache_key] = (now + _TTL_SECONDS, result)
+    return result

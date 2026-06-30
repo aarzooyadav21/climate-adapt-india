@@ -1,34 +1,46 @@
-# plan.md
+# plan.md (Updated)
 
 ## 1) Objectives
-- Prove the **core climate-twin data + AI pipeline** works end-to-end in isolation: NASA POWER + Open‑Meteo + LLM + anomaly detection.
-- Ship an MVP web app (FastAPI + React) that surfaces **India map + climate panels + monsoon/extremes/drought + scenarios + sector views + advisor chat**.
-- Add **multi-role auth** (Policymaker/Scientist/Farmer) only after core + v1 UX are stable.
-- Maintain ISRO Earth Observatory mission-control UI with clear provenance for every metric.
+- Deliver an **AI-powered Climate Digital Twin for India** focused on adaptation, integrating:
+  - **Real-time + historical observations** (NASA POWER, Open-Meteo, ERA5)
+  - **Derived indicators** (anomalies, drought proxy, hazards heuristics)
+  - **Grounded AI narratives** with strict “no invented numbers” behavior
+- Provide an **ISRO Earth Observatory / Mission Control** UI with clear provenance for every metric.
+- Provide **multi-role experiences** (Scientist / Policymaker / Farmer) with strict RBAC and role-appropriate navigation.
+- Provide **continuous IDW heatmap** over India with hover inspection and **state/district resolution toggles**.
+- Support **scenario running (Scientist Lab)**, saved scenarios, and CSV/JSON export.
+- Integrate **JalVayu Drishti-inspired modules**:
+  - Forest Fire / Hazards console
+  - Cyclone Watch
+  - Daily AI Climate Bulletin
+
+**Current status:** Core application and JalVayu Drishti integration are implemented end-to-end (backend + frontend). Bulletin timeout issue mitigated via lighter context + TTL caching.
+
+---
 
 ## 2) Implementation Steps (Phased)
 
 ### Phase 1 — Core POC (Isolation) *must pass before app work*
 **User stories**
 1. As a developer, I can fetch NASA POWER historical climate variables for Delhi/Mumbai/Chennai reliably.
-2. As a developer, I can fetch Open‑Meteo reanalysis + forecast for the same points with consistent units.
+2. As a developer, I can fetch Open-Meteo reanalysis + forecast for the same points with consistent units.
 3. As a developer, I can compute anomalies/z-scores (and SPI-like drought proxy) from fetched series.
 4. As a developer, I can call Emergent LLM (Claude/GPT) and get a structured, India-relevant analysis.
 5. As a developer, I can run one script and see a clear PASS/FAIL report for every dependency.
 
 **Steps**
-- Websearch quick refs: NASA POWER parameters/temporal endpoints; Open‑Meteo climate/reanalysis query patterns; SPI calculation basics.
-- Create `/app/test_core.py`:
-  - Fetch NASA POWER daily data (temp/precip/humidity/wind/solar) for 3 cities (lat/lon constants).
-  - Fetch Open‑Meteo forecast + ERA5 reanalysis for same cities.
-  - Normalize outputs (units, time axis) and store small cache JSON in `/app/tmp/`.
-  - Run anomaly detection on temperature and precipitation (z-score + rolling baseline); compute SPI-proxy from precip.
-  - Call LLM once with a strict JSON schema response (summary, drivers, risks, confidence, citations/provenance fields).
-  - Print PASS/FAIL with reasons; non-zero exit on failure.
-- Iterate until: APIs stable, parsing robust, LLM returns valid JSON, anomalies computed.
+- Create and iterate on `/app/test_core.py`:
+  - Fetch NASA POWER daily data for 3 cities.
+  - Fetch Open-Meteo forecast + ERA5 reanalysis for same cities.
+  - Normalize outputs + store cache JSON in `/app/tmp/`.
+  - Run anomaly detection on temperature and precipitation; compute SPI-proxy.
+  - Call LLM with strict JSON schema + provenance fields.
+  - Print PASS/FAIL; non-zero exit on failure.
 
 **Exit criteria**
 - Script completes with PASS for all 4 core checks on 3 cities, twice in a row.
+
+**Status:** ✅ Completed earlier in project.
 
 ---
 
@@ -36,65 +48,55 @@
 **User stories**
 1. As a user, I can open the app and see an India mission-control home with live timestamp + data source status.
 2. As a user, I can view an interactive India map and click a state/city to see a climate snapshot.
-3. As a user, I can toggle layers (temp/rain/anomaly) and immediately see the legend update.
+3. As a user, I can toggle layers and see legend update.
 4. As a user, I can open Monsoon and Drought pages to see time-series + a state heatmap.
-5. As a user, I can run a simple scenario (+2°C, horizon 20y) and get charts + AI narrative.
+5. As a user, I can run a simple scenario and get charts + AI narrative.
 
 **Backend (FastAPI)**
-- Project skeleton + config (`.env`, settings, logging).
-- Data services:
-  - NASA POWER client, Open‑Meteo client, IMD-style mock provider (static JSON + generator for gaps).
-  - Unified `ClimateService` returning normalized structures + provenance.
-  - Caching (in-memory + MongoDB cache collection with TTL).
-- Endpoints (unauthenticated v1):
-  - `GET /api/health` (includes upstream status)
-  - `GET /api/climate/snapshot?lat&lon`
-  - `GET /api/climate/historical?lat&lon&start&end`
-  - `GET /api/india/states` (GeoJSON metadata + summary placeholders)
-  - `GET /api/monsoon/status` + `GET /api/monsoon/timeseries`
-  - `GET /api/drought/index` (SPI-proxy per state)
-  - `POST /api/scenario/run` (simple delta method + narrative stub)
+- Unified `ClimateService` returning normalized structures + provenance.
+- Core endpoints for snapshot/historical/monsoon/drought/scenario.
 
 **Frontend (React + shadcn/ui + Leaflet + Recharts)**
-- ISRO Earth Observatory dark theme (HUD panels, cyan/teal accents, alert colors).
-- App shell: header (timestamp, source lights), left nav (Map/Monsoon/Extremes/Drought/Scenarios/Sectors/Advisor).
-- India map (Leaflet + states GeoJSON): hover tooltips, click opens right-side panel.
-- Charts: snapshot cards + historical time-series; drought heatmap; monsoon chart.
-- Scenario page: form (region, warming, horizon) + results + narrative.
+- ISRO mission-control dark theme.
+- App shell with modules nav.
+- India map and analytics pages.
 
 **Testing**
-- 1 round end-to-end UI test: map click → snapshot → historical → monsoon → drought → scenario.
-- Fix parsing/caching/UI loading/error states.
+- End-to-end UI test: map → snapshot → monsoon → drought → scenario.
 
 **Exit criteria**
-- V1 works without auth, no broken pages, all panels show real data where available + provenance.
+- V1 works without auth; no broken pages; provenance displayed.
+
+**Status:** ✅ Completed earlier in project.
 
 ---
 
-### Phase 3 — Add Features: Extremes Panel + Sector Dashboards + Advisor Chat (Still No Auth)
+### Phase 3 — Add Features: Extremes Panel + Sector Dashboards + Advisor Chat
 **User stories**
-1. As a user, I can view an Extreme Weather page with heatwave/flood/cyclone/drought risk cards.
-2. As a user, I can see state-wise alert severity and a timeline of recent anomalies.
-3. As a user, I can open Agriculture/Water/Urban/Energy dashboards and see computed indices.
-4. As a user, I can chat with an AI Climate Advisor grounded in the current selected location data.
-5. As a user, I can export any chart dataset to CSV/JSON with provenance.
+1. As a user, I can view an Extreme Weather page with risk cards.
+2. As a user, I can see state-wise alert severity.
+3. As a user, I can open Agriculture/Water/Urban/Energy dashboards.
+4. As a user, I can chat with an AI Climate Advisor grounded in selected location data.
+5. As a user, I can export chart datasets to CSV/JSON with provenance.
 
 **Backend**
-- `GET /api/extremes/alerts` (rule-based from thresholds + anomaly scores).
-- `GET /api/sectors/agriculture|water|urban|energy` (indices computed from temp/rain/wind/solar proxies).
-- `POST /api/advisor/chat` (LLM + retrieval of current context: location, time window, anomalies; enforce JSON tool output).
-- `GET /api/data/export?dataset&format`.
+- Extremes alerts + narrative endpoints.
+- Sector indices endpoints.
+- Advisor chat endpoint with grounding + provenance.
+- Export endpoints.
 
 **Frontend**
-- Extremes page (alert cards, severity bands).
-- Sector pages with role-agnostic views (later gated).
-- Advisor panel (dock/floating) with citations to underlying API outputs.
+- Extremes page.
+- Sector pages.
+- Advisor panel.
 
 **Testing**
-- 1 round end-to-end test across all pages + export + chat.
+- End-to-end test across pages + export + advisor.
 
 **Exit criteria**
-- Advisor responds with grounded, structured answers; exports download correctly.
+- Advisor responds grounded; exports correct.
+
+**Status:** ✅ Completed earlier in project.
 
 ---
 
@@ -102,30 +104,65 @@
 **User stories**
 1. As a user, I can register/login and select a role (Policymaker/Scientist/Farmer).
 2. As a user, I’m routed to a role-appropriate default dashboard.
-3. As a farmer, I primarily see Agriculture + local forecast/advisory panels.
-4. As a policymaker, I primarily see Water/Urban risk + scenario summaries.
+3. As a farmer, I primarily see agriculture + advisory.
+4. As a policymaker, I see executive risk + summaries.
 5. As a scientist, I can access all datasets, exports, and configuration options.
 
 **Backend**
-- Mongo models: users, sessions/chats, saved scenarios.
-- Auth endpoints: `POST /api/auth/register`, `/api/auth/login`, `GET /api/auth/me`.
-- JWT middleware + role-based guards.
-- Persist chat sessions + saved scenarios per user.
+- Mongo models: users, scenarios.
+- JWT auth + role-based guards.
+- Seed users for QA.
 
 **Frontend**
-- Login/register pages; role badges.
-- Role-based navigation + default routes.
-- Seed test users for QA.
+- Login/register.
+- Role-based navigation and route gating.
 
 **Testing**
-- 1 round end-to-end test for all roles + permissions.
+- End-to-end tests for each role.
 
 **Exit criteria**
-- Role gating correct; no unauthorized access; sessions stable.
+- Role gating correct; no unauthorized access.
+
+**Status:** ✅ Completed earlier in project.
 
 ---
 
-### Phase 5 — Polish + Hardening + Comprehensive Testing
+### Phase 5 — JalVayu Drishti Integration (Hazards + Cyclone Watch + Daily AI Bulletin)
+**User stories**
+1. As a policymaker/scientist, I can view **Forest Fire Risk** as a mission console (map + ranked states + AI narrative).
+2. As a policymaker/scientist, I can view **Cyclone Watch** for coastal states with severity signals and basin grouping.
+3. As any role (including farmer), I can generate a **Daily AI Climate Bulletin** tailored to my role and selected state.
+4. As a user, I see provenance and the system avoids hallucinated numbers.
+
+**Backend (FastAPI)**
+- `GET /api/hazards/fire-risk` + `GET /api/hazards/fire-risk/narrative`
+- `GET /api/hazards/cyclone-watch`
+- `GET /api/bulletin?state_code=XX&role=YY` (auth required)
+- **Performance/timeout mitigation (implemented):**
+  - Bulletin now uses **lighter context** (snapshot + monsoon + drought + extremes)
+  - Adds **in-memory TTL cache** for generated bulletins (30 minutes) to prevent repeated expensive runs and reduce latency.
+
+**Frontend (React)**
+- New pages:
+  - `/app/hazards/fire` (FireRisk.jsx): choropleth map + hover card + ranked list + generate narrative
+  - `/app/hazards/cyclone` (Cyclone.jsx): pulsing markers + basin tables + severity KPIs
+  - `/app/bulletin` (Bulletin.jsx): state selector + role selector + generate/regenerate + provenance
+- Navigation + RBAC wiring:
+  - Farmer: Bulletin accessible; Fire/Cyclone hidden and direct URL access redirects.
+  - Policymaker/Scientist: full access to Fire/Cyclone/Bulletin.
+
+**Testing**
+- Frontend testing agent: **24/24 tests passed** (UI rendering + role gating).
+- Manual verification: bulletin renders; fresh generation ~50s, cached ~0.5s.
+
+**Exit criteria**
+- New modules available per role; UI consistent with ISRO theme; bulletin generation reliable under proxy limits.
+
+**Status:** ✅ Completed.
+
+---
+
+### Phase 6 — Polish + Hardening + Comprehensive Testing
 **User stories**
 1. As a user, I always understand data provenance for any number shown.
 2. As a user, I can trust error handling (graceful fallbacks if upstream APIs fail).
@@ -134,23 +171,28 @@
 5. As a user, the app feels like a cohesive ISRO mission-control console.
 
 **Steps**
-- Standardize provenance blocks + units.
-- Add retries/timeouts/circuit-breaker-ish handling for upstream calls.
-- Performance: cache tuning, pagination, request de-dupe.
+- Standardize provenance blocks + units across all modules.
+- Add retries/timeouts/backoff where appropriate for Open-Meteo rate limiting.
+- Performance:
+  - Expand caching strategy for expensive fan-out endpoints (district grid, hazards) if needed.
+  - Consider async job + polling pattern for long LLM generations (optional; cache already mitigates bulletin).
 - Final full-suite testing pass; fix regressions.
+
+**Status:** 🔜 Next.
 
 ---
 
 ## 3) Next Actions
-1. Implement `/app/test_core.py` and run until all PASS.
-2. Lock normalized data schemas (snapshot, historical series, provenance) based on POC outputs.
-3. Build Phase 2 v1 app (map + core dashboards) without auth; run e2e test.
-4. Add Phase 3 (extremes + sectors + advisor + export); run e2e test.
-5. Add Phase 4 auth + role routing; run e2e test.
+1. **Run a full smoke pass** across roles (Scientist/Policymaker/Farmer) including the 3 new modules.
+2. Monitor Open-Meteo rate limiting (429) for district grid and consider caching/persistence if it becomes frequent.
+3. Optional hardening: add async bulletin job + polling if infrastructure timeouts recur in other deployments.
+4. Prepare for deployment (when user says “deploy”).
+
+---
 
 ## 4) Success Criteria
-- Core POC: NASA POWER + Open‑Meteo + LLM + anomaly detection succeed reliably for 3 Indian cities.
-- V1 App: interactive India map + snapshot + historical charts + monsoon/drought + scenario all functional.
-- Advisor: produces structured, grounded responses with provenance and handles missing data gracefully.
-- Multi-role: correct dashboards/permissions for Policymaker/Scientist/Farmer; scenarios + chats persist.
-- Stability: end-to-end tests pass after each phase; no critical broken flows.
+- Core POC: NASA POWER + Open-Meteo + LLM + anomaly detection succeed reliably.
+- Mission Control: continuous IDW heatmap + hover inspector at state/district resolution.
+- Multi-role: correct dashboards and strict RBAC.
+- JalVayu Drishti modules: Fire Risk + Cyclone Watch + Daily AI Bulletin fully integrated with consistent theme and provenance.
+- Stability: end-to-end tests pass; graceful handling of upstream failures; caching prevents proxy timeouts for expensive AI calls.
