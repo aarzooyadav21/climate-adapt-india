@@ -5,6 +5,7 @@ import { ProvenanceBadge } from "@/components/ProvenanceBadge";
 import { KPITile } from "@/components/KPITile";
 import AdvisorPanel from "@/components/AdvisorPanel";
 import IndiaMap from "@/components/IndiaMap";
+import { ExportMenu } from "@/components/ExportMenu";
 import api from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -41,9 +42,16 @@ export default function Drought() {
 
   return (
     <div className="p-4 md:p-6 space-y-4">
-      <div>
-        <div className="text-[10px] tracking-[0.22em] uppercase text-muted-foreground">// Drought Monitor</div>
-        <h1 className="text-xl md:text-2xl font-semibold tracking-tight">SPI-Style Drought Severity</h1>
+      <div className="flex flex-col md:flex-row gap-2 md:items-end md:justify-between">
+        <div>
+          <div className="text-[10px] tracking-[0.22em] uppercase text-muted-foreground">// Drought Monitor</div>
+          <h1 className="text-xl md:text-2xl font-semibold tracking-tight">SPI-Style Drought Severity</h1>
+        </div>
+        <ExportMenu
+          dataTestId="drought-export"
+          label="Export Data"
+          options={[{ label: "Drought Index (all states)", endpoint: "/export/drought", params: {}, filenameBase: "drought_index_india" }]}
+        />
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

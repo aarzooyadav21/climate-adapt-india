@@ -11,6 +11,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import StateSelector from "@/components/StateSelector";
 import AdvisorPanel from "@/components/AdvisorPanel";
+import { SaveScenarioButton, SavedScenariosButton } from "@/components/SavedScenarios";
 import { useAppState } from "@/context/AppStateContext";
 import api from "@/lib/api";
 import { toast } from "sonner";
@@ -30,11 +31,12 @@ const IMPACT_COLOR = {
 };
 
 export default function Scenarios() {
-  const { selectedState } = useAppState();
+  const { selectedState, setSelectedState } = useAppState();
   const [warming, setWarming] = useState(2.0);
   const [horizon, setHorizon] = useState(20);
   const [result, setResult] = useState(null);
   const [running, setRunning] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   const run = async () => {
     if (!selectedState) return;
@@ -55,6 +57,40 @@ export default function Scenarios() {
     }
   };
 
+  const onLoadSaved = (s) => {
+    setWarming(s.warming_c);
+    setHorizon(s.horizon_years);
+    // jump to that state if available
+    if (s.state_code && s.state_code !== selectedState?.code) {
+      // Trigger state change via app state — fetch states list to get lat/lon
+      api.get("/climate/states").then(({ data }) => {
+        const st = (data.states || []).find((x) => x.code === s.state_code);
+        if (st) setSelectedState({ code: st.code, name: st.name, lat: st.lat, lon: st.lon });
+      });
+    }
+    if (s.result_summary && Object.keys(s.result_summary).length) {
+      setResult(s.result_summary);
+    }
+    toast.success(`Loaded: ${s.label}`);
+  };
+
+  const savePayload = result ? {
+    state_code: result.state?.code,
+    state_name: result.state?.name,
+    warming_c: result.input?.warming_c,
+    horizon_years: result.input?.horizon_years,
+    rainfall_shift_pct: result.input?.rainfall_shift_pct ?? null,
+    result_summary: {
+      state: result.state,
+      input: result.input,
+      baseline: result.baseline,
+      projection: result.projection,
+      chart: result.chart,
+      narrative: result.narrative,
+      provenance: result.provenance,
+    },
+  } : null;
+
   const chartData = result
     ? [
         { name: "Baseline", temp: result.baseline.temperature_c, rain: result.baseline.rainfall_mm },
@@ -66,7 +102,13 @@ export default function Scenarios() {
     <div className="p-4 md:p-6 space-y-4">
       <div>
         <div className="text-[10px] tracking-[0.22em] uppercase text-muted-foreground">// Scenario Simulator</div>
-        <h1 className="text-xl md:text-2xl font-semibold tracking-tight">Warming What-If · Sector Impact Projection</h1>
+        <div className="flex flex-col md:flex-row gap-2 md:items-center md:justify-between">
+          <h1 className="text-xl md:text-2xl font-semibold tracking-tight">Warming What-If · Sector Impact Projection</h1>
+          <div className="flex items-center gap-2">
+            <SaveScenarioButton scenarioPayload={savePayload} disabled={!result} />
+            <SavedScenariosButton onLoad={onLoadSaved} reloadKey={reloadKey} />
+          </div>
+        </div>
       </div>
 
       <div className="grid lg:grid-cols-12 gap-4">

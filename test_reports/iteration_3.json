@@ -1,0 +1,52 @@
+{
+  "summary": "Phase 8 testing completed: Backend 15/15 passed (100%), Frontend 4/5 features passed (80%). Found 1 critical bug in Save Scenario functionality.",
+  "backend_issues": {
+    "critical_bugs": [],
+    "flaky_endpoints": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "component": "Scenarios.jsx / SaveScenarioButton",
+        "issue": "Save Scenario button remains disabled after successful scenario simulation. Error in console: 'Cannot read properties of undefined (reading warming_c)'",
+        "root_cause": "The savePayload object is built with result.input?.warming_c, but when the SaveScenarioButton dialog content tries to render scenarioPayload?.warming_c on line 51 of SavedScenarios.jsx, it causes a React error if result.input is undefined or incomplete. This prevents the button from being enabled.",
+        "affected_selectors": ["[data-testid='save-scenario-open']"],
+        "fix_priority": "CRITICAL",
+        "suggested_fix": "Add better null checking in Scenarios.jsx savePayload construction. Ensure result.input exists before building savePayload, or add fallback values. Also add error boundary or better validation in SaveScenarioButton component."
+      }
+    ],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "Backend: GET /api/geo/india/states returns GeoJSON with 35 state polygons",
+    "Backend: GET /api/export/snapshot?state_code=DL&fmt=csv returns CSV",
+    "Backend: GET /api/export/snapshot?state_code=DL&fmt=json returns JSON",
+    "Backend: GET /api/export/historical?state_code=MH&days=90&fmt=csv returns CSV with 90 days",
+    "Backend: GET /api/export/drought?fmt=csv returns CSV with 36 states",
+    "Backend: GET /api/export/monsoon?fmt=csv returns CSV with 14 states",
+    "Backend: POST /api/saved-scenarios (with auth) creates scenario and returns id",
+    "Backend: GET /api/saved-scenarios (with auth) returns list of user scenarios",
+    "Backend: GET /api/saved-scenarios/{id} returns specific scenario",
+    "Backend: DELETE /api/saved-scenarios/{id} deletes scenario",
+    "Backend: POST /api/saved-scenarios without auth returns 401",
+    "Backend: User isolation - User A cannot access User B's scenarios (returns 404)",
+    "Frontend US-19: Drought page renders India choropleth with 35 state polygons filled with SPI colors",
+    "Frontend US-20: Dashboard drought layer tab renders polygons on map",
+    "Frontend US-21: Export Data dropdowns exist on Dashboard, Monsoon, Drought pages with CSV/JSON options",
+    "Frontend US-23: Saved Scenarios dialog opens, shows saved scenarios with Load/Delete buttons, Load functionality works"
+  ],
+  "test_report_links": [
+    "/app/backend/backend_test_phase8.py"
+  ],
+  "success_percentage": {
+    "backend": "100% (15/15 tests passed)",
+    "frontend": "80% (4/5 features passed, 1 critical bug found)"
+  },
+  "action_item_for_main_agent": "CRITICAL: Fix Save Scenario button in Scenarios.jsx. The button remains disabled after scenario simulation completes due to error 'Cannot read properties of undefined (reading warming_c)'. Root cause: savePayload construction assumes result.input exists, but SaveScenarioButton dialog tries to render warming_c which may be undefined. Add proper null checking in savePayload construction (lines 77-92 of Scenarios.jsx) and ensure result.input is fully populated before enabling the Save button. Also add validation in SaveScenarioButton component (line 51 of SavedScenarios.jsx) to handle undefined values gracefully.",
+  "updated_files": [
+    "/app/backend/backend_test_phase8.py"
+  ],
+  "should_call_test_agent_after_fix": "true",
+  "should_main_agent_test_itself": "false"
+}

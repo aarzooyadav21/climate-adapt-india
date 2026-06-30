@@ -7,6 +7,7 @@ import { KPITile } from "@/components/KPITile";
 import { ProvenanceBadge } from "@/components/ProvenanceBadge";
 import StateSelector from "@/components/StateSelector";
 import AdvisorPanel from "@/components/AdvisorPanel";
+import { ExportMenu } from "@/components/ExportMenu";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAppState } from "@/context/AppStateContext";
@@ -57,6 +58,14 @@ export default function Dashboard() {
             </TabsList>
           </Tabs>
           <StateSelector />
+          <ExportMenu
+            dataTestId="dashboard-export"
+            label="Export"
+            options={[
+              { label: `${selectedState?.name || "State"} Live Snapshot`, endpoint: "/export/snapshot", params: { state_code: selectedState?.code }, filenameBase: `climate_snapshot_${selectedState?.code}` },
+              { label: `${selectedState?.name || "State"} Historical (180d)`, endpoint: "/export/historical", params: { state_code: selectedState?.code, days: 180 }, filenameBase: `climate_historical_${selectedState?.code}_180d` },
+            ]}
+          />
         </div>
       </div>
 

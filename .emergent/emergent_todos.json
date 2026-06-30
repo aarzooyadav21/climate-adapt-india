@@ -1,38 +1,26 @@
 [
   {
-    "content": "Phase 1: POC - Test NASA POWER + Open-Meteo + LLM + anomaly detection in isolation",
+    "content": "Phase 8a: Add India state GeoJSON polygons + choropleth rendering on map",
     "status": "completed"
   },
   {
-    "content": "Phase 2: Get ISRO Earth Observatory design guidelines via design_agent",
+    "content": "Phase 8b: Persistent saved scenarios (save / list / delete per user)",
     "status": "completed"
   },
   {
-    "content": "Phase 2: Backend - climate service layer, India states data, snapshot/historical APIs",
+    "content": "Phase 8c: CSV/JSON data export endpoints + UI buttons on charts/tables",
     "status": "completed"
   },
   {
-    "content": "Phase 2: Frontend - dark mission-control shell, India map, climate panels",
-    "status": "completed"
+    "content": "Phase 8d: Run testing_agent_v3 on new features",
+    "status": "in_progress"
   },
   {
-    "content": "Phase 3: Monsoon tracker + Extreme weather + Drought early warning",
-    "status": "completed"
+    "content": "Phase 9: District-level resolution (deferred - major lift; will discuss with user)",
+    "status": "pending"
   },
   {
-    "content": "Phase 4: Scenario simulator + Sector dashboards (Agri/Water/Urban/Energy)",
-    "status": "completed"
-  },
-  {
-    "content": "Phase 5: AI Climate Advisor chat + data export + provenance",
-    "status": "completed"
-  },
-  {
-    "content": "Phase 6: Multi-role auth + role routing + persistence",
-    "status": "completed"
-  },
-  {
-    "content": "Phase 7: Comprehensive end-to-end testing via testing_agent_v3 (Backend 21/21 + Frontend 18/18 PASSED)",
-    "status": "completed"
+    "content": "Phase 10: Deployment via deployment_agent",
+    "status": "pending"
   }
 ]

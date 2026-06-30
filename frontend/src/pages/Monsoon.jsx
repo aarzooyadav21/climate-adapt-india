@@ -9,6 +9,7 @@ import { ProvenanceBadge } from "@/components/ProvenanceBadge";
 import { KPITile } from "@/components/KPITile";
 import StateSelector from "@/components/StateSelector";
 import AdvisorPanel from "@/components/AdvisorPanel";
+import { ExportMenu } from "@/components/ExportMenu";
 import { useAppState } from "@/context/AppStateContext";
 import api from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
@@ -63,6 +64,17 @@ export default function Monsoon() {
           <h1 className="text-xl md:text-2xl font-semibold tracking-tight">Indian Monsoon · Real-time Variability</h1>
         </div>
         <div className="flex items-center gap-2">
+          <ExportMenu
+            dataTestId="monsoon-export"
+            label="Export Data"
+            options={[
+              { label: "National Monsoon Status (all states)", endpoint: "/export/monsoon", params: {}, filenameBase: "monsoon_status_india" },
+              { label: `${selectedState?.name || "State"} Rainfall (ERA5 180d)`,
+                endpoint: "/export/historical",
+                params: { state_code: selectedState?.code, days: 180 },
+                filenameBase: `monsoon_rainfall_${selectedState?.code}_180d` },
+            ]}
+          />
           <StateSelector />
         </div>
       </div>

@@ -27,6 +27,9 @@ from routes.monsoon import router as monsoon_router
 from routes.extremes import router as extremes_router, drought_router
 from routes.scenario import router as scenario_router, sector_router
 from routes.advisor import build_advisor_router
+from routes.geo import router as geo_router
+from routes.saved import build_saved_router
+from routes.export import router as export_router
 
 
 @asynccontextmanager
@@ -75,6 +78,9 @@ api.include_router(drought_router)
 api.include_router(scenario_router)
 api.include_router(sector_router)
 api.include_router(build_advisor_router(db))
+api.include_router(geo_router)
+api.include_router(build_saved_router(db))
+api.include_router(export_router)
 
 app.include_router(api)
 
