@@ -1,0 +1,113 @@
+{
+  "nasa_power": {
+    "status": "\u2705 PASS",
+    "samples": {
+      "Delhi": {
+        "avg_temp_c": 36.14,
+        "total_precip_mm": 27.13,
+        "records": 31
+      },
+      "Mumbai": {
+        "avg_temp_c": 31.42,
+        "total_precip_mm": 160.49,
+        "records": 31
+      },
+      "Chennai": {
+        "avg_temp_c": 30.66,
+        "total_precip_mm": 168.09,
+        "records": 31
+      }
+    }
+  },
+  "open_meteo": {
+    "status": "\u2705 PASS",
+    "samples": {
+      "Delhi": {
+        "current_temp": 39.1,
+        "humidity": 35,
+        "wind": 6.2,
+        "forecast_days": 7,
+        "max_forecast_temp": 39.4
+      },
+      "Mumbai": {
+        "current_temp": 27.2,
+        "humidity": 87,
+        "wind": 13.1,
+        "forecast_days": 7,
+        "max_forecast_temp": 28.8
+      },
+      "Chennai": {
+        "current_temp": 35.2,
+        "humidity": 45,
+        "wind": 16.0,
+        "forecast_days": 7,
+        "max_forecast_temp": 38.7
+      },
+      "era5_delhi_days": 91
+    }
+  },
+  "stats_engine": {
+    "status": "\u2705 PASS",
+    "samples": {
+      "Delhi": {
+        "z_score_last_day": 3.55,
+        "anomaly_detected": true,
+        "spi_proxy": 0.111
+      },
+      "Mumbai": {
+        "z_score_last_day": 2.83,
+        "anomaly_detected": true,
+        "spi_proxy": 0.111
+      },
+      "Chennai": {
+        "z_score_last_day": 2.82,
+        "anomaly_detected": true,
+        "spi_proxy": 0.111
+      }
+    }
+  },
+  "llm": {
+    "status": "\u2705 PASS",
+    "sample": {
+      "headline": "Delhi under intense pre-monsoon heat with 39\u00b0C+ temps; Mumbai and Chennai show active monsoon-season conditions with high humidity and significant recent rainfall.",
+      "monsoon_state": "active",
+      "key_drivers": [
+        "Delhi 30-day avg 36.1\u00b0C with only 27mm rain indicates delayed or pre-onset dry heat stress",
+        "Mumbai 160mm and Chennai 168mm 30-day precipitation consistent with active southwest monsoon influence",
+        "Chennai current low humidity (45%) despite recent rainfall suggests possible break phase or easterly wind shift"
+      ],
+      "risks": [
+        {
+          "sector": "health",
+          "level": "high",
+          "note": "Delhi current 39.1\u00b0C with 35% humidity signals acute heat stress and heatstroke risk for outdoor workers"
+        },
+        {
+          "sector": "urban",
+          "level": "high",
+          "note": "Mumbai 87% humidity and 160mm recent rain raises urban flooding and waterlogging risk in low-lying areas"
+        },
+        {
+          "sector": "agriculture",
+          "level": "high",
+          "note": "Delhi rain deficit (27mm in 30 days) threatens kharif sowing window if monsoon onset continues to lag"
+        },
+        {
+          "sector": "energy",
+          "level": "high",
+          "note": "Delhi peak demand surge expected as max forecast hits 39.4\u00b0C; grid stress and load-shedding risk elevated"
+        },
+        {
+          "sector": "water",
+          "level": "moderate",
+          "note": "Chennai 168mm recent rain improves reservoir inflows but 38.7\u00b0C forecast max risks rapid evapotranspiration losses"
+        }
+      ],
+      "confidence": 0.72,
+      "provenance": [
+        "NASA POWER",
+        "Open-Meteo"
+      ]
+    }
+  }
+}
