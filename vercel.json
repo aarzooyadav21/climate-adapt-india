@@ -1,22 +1,23 @@
 {
-  "services": {
-    "frontend": {
-      "root": "frontend/",
-      "framework": "create-react-app"
+  "builds": [
+    {
+      "src": "frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "build" }
     },
-    "backend": {
-      "root": "backend/",
-      "entrypoint": "server.py"
+    {
+      "src": "backend/server.py",
+      "use": "@vercel/python"
     }
-  },
-  "rewrites": [
+  ],
+  "routes": [
     {
-      "source": "/api/(.*)",
-      "destination": { "service": "backend" }
+      "src": "/api/(.*)",
+      "dest": "backend/server.py"
     },
     {
-      "source": "/(.*)",
-      "destination": { "service": "frontend" }
+      "src": "/(.*)",
+      "dest": "frontend/$1"
     }
   ]
 }
