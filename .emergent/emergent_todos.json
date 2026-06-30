@@ -1,6 +1,6 @@
 [
   {
-    "content": "Phase 8a: Add India state GeoJSON polygons + choropleth rendering on map",
+    "content": "Phase 8a: India state GeoJSON polygons + choropleth rendering on map",
     "status": "completed"
   },
   {
@@ -12,15 +12,15 @@
     "status": "completed"
   },
   {
-    "content": "Phase 8d: Run testing_agent_v3 on new features",
-    "status": "in_progress"
+    "content": "Phase 8d: Testing - 15/15 backend + 10/10 frontend (after fix) PASSED",
+    "status": "completed"
   },
   {
-    "content": "Phase 9: District-level resolution (deferred - major lift; will discuss with user)",
+    "content": "Phase 9: District-level resolution - deferred (would require ~700 district GeoJSON + heavy parallel API calls; recommend separate phase)",
     "status": "pending"
   },
   {
-    "content": "Phase 10: Deployment via deployment_agent",
+    "content": "Phase 10: Deployment - await user trigger",
     "status": "pending"
   }
 ]
