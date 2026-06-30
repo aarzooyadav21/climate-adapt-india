@@ -10,18 +10,18 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const NAV = [
-  { to: "/app",                 label: "Mission Control", icon: Activity },
-  { to: "/app/monsoon",         label: "Monsoon Tracker", icon: CloudRain },
-  { to: "/app/extremes",        label: "Extreme Weather", icon: Flame },
-  { to: "/app/drought",         label: "Drought Monitor", icon: Droplets },
-  { to: "/app/scenarios",       label: "Scenario Simulator", icon: FlaskConical },
-  { to: "/app/lab",             label: "Scientist Lab",     icon: Beaker },
-  { to: "/app/sectors/agriculture", label: "Agriculture",   icon: Sprout },
-  { to: "/app/sectors/water",   label: "Water Resources",  icon: Wind },
-  { to: "/app/sectors/urban",   label: "Urban Heat",       icon: Building2 },
-  { to: "/app/sectors/energy",  label: "Energy",           icon: Sun },
-  { to: "/app/advisor",         label: "AI Climate Advisor", icon: Bot },
+const NAV_ALL = [
+  { to: "/app",                 label: "Home",                icon: Activity, roles: ["scientist", "policymaker", "farmer"] },
+  { to: "/app/monsoon",         label: "Monsoon Tracker",     icon: CloudRain, roles: ["scientist", "policymaker"] },
+  { to: "/app/extremes",        label: "Extreme Weather",     icon: Flame, roles: ["scientist", "policymaker"] },
+  { to: "/app/drought",         label: "Drought Monitor",     icon: Droplets, roles: ["scientist", "policymaker"] },
+  { to: "/app/scenarios",       label: "Scenario Simulator",  icon: FlaskConical, roles: ["scientist", "policymaker"] },
+  { to: "/app/lab",             label: "Scientist Lab",       icon: Beaker, roles: ["scientist"] },
+  { to: "/app/sectors/agriculture", label: "Agriculture",     icon: Sprout, roles: ["scientist", "policymaker", "farmer"] },
+  { to: "/app/sectors/water",   label: "Water Resources",     icon: Wind, roles: ["scientist", "policymaker"] },
+  { to: "/app/sectors/urban",   label: "Urban Heat",          icon: Building2, roles: ["scientist", "policymaker"] },
+  { to: "/app/sectors/energy",  label: "Energy",              icon: Sun, roles: ["scientist", "policymaker"] },
+  { to: "/app/advisor",         label: "AI Climate Advisor",  icon: Bot, roles: ["scientist", "policymaker", "farmer"] },
 ];
 
 export default function AppShell() {
@@ -29,6 +29,14 @@ export default function AppShell() {
   const navigate = useNavigate();
 
   const onLogout = () => { logout(); navigate("/login"); };
+
+  const role = user?.role || "scientist";
+  const NAV = NAV_ALL.filter((n) => n.roles.includes(role));
+  // Role label for the header chip
+  const ROLE_LABEL = role.toUpperCase();
+  // Role-flavored home label
+  const homeLabel = role === "farmer" ? "Farmer Console" : role === "policymaker" ? "Executive Brief" : "Mission Control";
+  NAV[0] = { ...NAV[0], label: homeLabel };
 
   return (
     <div className="min-h-screen flex flex-col">

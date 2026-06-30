@@ -17,6 +17,8 @@ import Scenarios from "@/pages/Scenarios";
 import SectorPage from "@/pages/Sectors";
 import Advisor from "@/pages/Advisor";
 import Lab from "@/pages/Lab";
+import FarmerHome from "@/pages/FarmerHome";
+import PolicymakerHome from "@/pages/PolicymakerHome";
 
 const Protected = ({ children }) => {
   const { user, loading } = useAuth();
@@ -24,6 +26,28 @@ const Protected = ({ children }) => {
   if (!user) return <Navigate to="/login" replace />;
   return children;
 };
+
+// Pick the right home page based on role
+function RoleHome() {
+  const { user } = useAuth();
+  if (user?.role === "farmer") return <FarmerHome />;
+  if (user?.role === "policymaker") return <PolicymakerHome />;
+  return <Dashboard />;
+}
+
+// Restrict pages by role (farmers don't see Lab/Scenarios/Drought etc.)
+const ROLE_ACCESS = {
+  scientist: new Set(["dashboard", "monsoon", "extremes", "drought", "scenarios", "lab", "sectors", "advisor"]),
+  policymaker: new Set(["dashboard", "monsoon", "extremes", "drought", "scenarios", "sectors", "advisor"]),
+  farmer: new Set(["sectors-agriculture", "advisor"]),
+};
+
+function RoleGate({ moduleKey, children }) {
+  const { user } = useAuth();
+  const allowed = ROLE_ACCESS[user?.role] || ROLE_ACCESS.scientist;
+  if (!allowed.has(moduleKey)) return <Navigate to="/app" replace />;
+  return children;
+}
 
 function App() {
   useEffect(() => {
@@ -47,13 +71,13 @@ function App() {
                   </Protected>
                 }
               >
-                <Route path="/app" element={<Dashboard />} />
-                <Route path="/app/monsoon" element={<Monsoon />} />
-                <Route path="/app/extremes" element={<Extremes />} />
-                <Route path="/app/drought" element={<Drought />} />
-                <Route path="/app/scenarios" element={<Scenarios />} />
+                <Route path="/app" element={<RoleHome />} />
+                <Route path="/app/monsoon" element={<RoleGate moduleKey="monsoon"><Monsoon /></RoleGate>} />
+                <Route path="/app/extremes" element={<RoleGate moduleKey="extremes"><Extremes /></RoleGate>} />
+                <Route path="/app/drought" element={<RoleGate moduleKey="drought"><Drought /></RoleGate>} />
+                <Route path="/app/scenarios" element={<RoleGate moduleKey="scenarios"><Scenarios /></RoleGate>} />
                 <Route path="/app/sectors/:sector" element={<SectorPage />} />
-                <Route path="/app/lab" element={<Lab />} />
+                <Route path="/app/lab" element={<RoleGate moduleKey="lab"><Lab /></RoleGate>} />
                 <Route path="/app/advisor" element={<Advisor />} />
               </Route>
               <Route path="*" element={<Navigate to="/" replace />} />

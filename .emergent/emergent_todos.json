@@ -1,26 +1,26 @@
 [
   {
-    "content": "Phase 9a: Backend /api/climate/grid endpoint for continuous heatmap data",
+    "content": "Phase 10a: Backend farmer + policymaker endpoints",
     "status": "completed"
   },
   {
-    "content": "Phase 9b: Frontend continuous heatmap canvas overlay (IDW interpolated, clipped to India)",
+    "content": "Phase 10b: Frontend FarmerHome (simple, action-oriented, no jargon)",
     "status": "completed"
   },
   {
-    "content": "Phase 9c: Hover-anywhere cursor inspector (coords + interpolated value + nearest place)",
+    "content": "Phase 10c: Frontend PolicymakerHome (executive brief, risk cards)",
     "status": "completed"
   },
   {
-    "content": "Phase 9d: AI grounding hardening - strict no-hallucination + richer context + citations",
+    "content": "Phase 10d: Role-based nav filtering + /app redirect",
     "status": "completed"
   },
   {
-    "content": "Phase 9e: Scientist Lab - multi-variable experiments + comparison + sensitivity",
-    "status": "completed"
+    "content": "Phase 10e: Testing role experiences end-to-end",
+    "status": "in_progress"
   },
   {
-    "content": "Phase 9f: Testing - Backend 12/13 + Frontend 9/9 PASSED (96% overall)",
-    "status": "completed"
+    "content": "Phase 11: District-level resolution (next)",
+    "status": "pending"
   }
 ]
