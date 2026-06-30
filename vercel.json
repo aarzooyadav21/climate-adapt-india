@@ -1,13 +1,22 @@
 {
-  "projects": [
+  "services": {
+    "frontend": {
+      "root": "frontend/",
+      "framework": "create-react-app"
+    },
+    "backend": {
+      "root": "backend/",
+      "entrypoint": "main:app"
+    }
+  },
+  "rewrites": [
     {
-      "name": "frontend",
-      "path": "frontend"
+      "source": "/api/(.*)",
+      "destination": { "service": "backend" }
     },
     {
-      "name": "backend",
-      "path": "backend"
+      "source": "/(.*)",
+      "destination": { "service": "frontend" }
     }
   ]
 }
-
