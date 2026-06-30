@@ -93,8 +93,8 @@ export default function Scenarios() {
 
   const chartData = result
     ? [
-        { name: "Baseline", temp: result.baseline.temperature_c, rain: result.baseline.rainfall_mm },
-        { name: `+${result.input.warming_c}°C @ ${result.input.horizon_years}y`, temp: result.projection.temperature_c, rain: result.projection.rainfall_mm },
+        { name: "Baseline", temp: result.baseline?.temperature_c, rain: result.baseline?.rainfall_mm },
+        { name: `+${result.input?.warming_c ?? warming}°C @ ${result.input?.horizon_years ?? horizon}y`, temp: result.projection?.temperature_c, rain: result.projection?.rainfall_mm },
       ]
     : [];
 
@@ -158,7 +158,7 @@ export default function Scenarios() {
         </HUDPanel>
 
         <HUDPanel className="lg:col-span-8">
-          <HUDHeader title="Projection Results" subtitle={result ? `${result.state.name} · +${result.input.warming_c}°C · ${result.input.horizon_years}y` : "Run a scenario to see projections"}
+          <HUDHeader title="Projection Results" subtitle={result ? `${result.state?.name || "—"} · +${result.input?.warming_c ?? "?"}°C · ${result.input?.horizon_years ?? "?"}y` : "Run a scenario to see projections"}
             right={result && <div className="flex gap-2">{(result.provenance || []).slice(0, 2).map((p, i) => <ProvenanceBadge key={i} source={p.source} />)}</div>} />
           <HUDBody>
             {!result ? (

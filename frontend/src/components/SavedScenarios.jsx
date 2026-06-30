@@ -39,7 +39,7 @@ export function SaveScenarioButton({ scenarioPayload, disabled }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button data-testid="save-scenario-open" disabled={disabled || !user} variant="outline" size="sm"
+        <Button data-testid="save-scenario-open" disabled={disabled} variant="outline" size="sm"
                 className="font-mono text-[11px] border-border/80">
           <Save className="w-3 h-3 mr-1.5" /> Save Scenario
         </Button>
@@ -48,7 +48,7 @@ export function SaveScenarioButton({ scenarioPayload, disabled }) {
         <DialogHeader><DialogTitle className="text-sm tracking-[0.16em] uppercase">Save Scenario</DialogTitle></DialogHeader>
         <div className="space-y-3">
           <div className="text-xs text-muted-foreground">
-            {scenarioPayload?.state_name} · +{scenarioPayload?.warming_c}°C · {scenarioPayload?.horizon_years}y
+            {scenarioPayload?.state_name || scenarioPayload?.state_code || "—"} · +{scenarioPayload?.warming_c ?? "?"}°C · {scenarioPayload?.horizon_years ?? "?"}y
           </div>
           <Input data-testid="save-scenario-label" placeholder="Label (e.g. Punjab heat 2045)"
                  value={label} onChange={(e) => setLabel(e.target.value)} maxLength={120} className="font-mono" />
@@ -71,8 +71,7 @@ export function SavedScenariosButton({ onLoad, reloadKey }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const fetch = async () => {
-    if (!user) return;
+  const loadList = async () => {
     setLoading(true);
     try {
       const { data } = await api.get("/saved-scenarios");
@@ -82,7 +81,7 @@ export function SavedScenariosButton({ onLoad, reloadKey }) {
     } finally { setLoading(false); }
   };
 
-  useEffect(() => { if (open) fetch(); /* eslint-disable-next-line */ }, [open, reloadKey]);
+  useEffect(() => { if (open) loadList(); /* eslint-disable-next-line */ }, [open, reloadKey]);
 
   const onDelete = async (id) => {
     try {
@@ -95,7 +94,7 @@ export function SavedScenariosButton({ onLoad, reloadKey }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button data-testid="saved-scenarios-open" disabled={!user} variant="outline" size="sm"
+        <Button data-testid="saved-scenarios-open" variant="outline" size="sm"
                 className="font-mono text-[11px] border-border/80">
           <FolderOpen className="w-3 h-3 mr-1.5" /> Saved Scenarios
         </Button>
