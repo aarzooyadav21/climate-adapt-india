@@ -1,89 +1,87 @@
-from fastapi import FastAPI, APIRouter
-from dotenv import load_dotenv
-from starlette.middleware.cors import CORSMiddleware
-from motor.motor_asyncio import AsyncIOMotorClient
-import os
+"""Bharat Climate Twin — FastAPI server."""
+from contextlib import asynccontextmanager
+from datetime import datetime, timezone, timedelta
 import logging
+import os
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict
-from typing import List
-import uuid
-from datetime import datetime, timezone
 
+from dotenv import load_dotenv
+from fastapi import FastAPI, APIRouter
+from motor.motor_asyncio import AsyncIOMotorClient
+from starlette.middleware.cors import CORSMiddleware
 
 ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / '.env')
+load_dotenv(ROOT_DIR / ".env")
 
-# MongoDB connection
-mongo_url = os.environ['MONGO_URL']
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logger = logging.getLogger("climate-twin")
+
+mongo_url = os.environ["MONGO_URL"]
 client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+db = client[os.environ["DB_NAME"]]
 
-# Create the main app without a prefix
-app = FastAPI()
+from services.auth_service import ensure_seed_users
+from routes.auth import build_auth_router
+from routes.climate import router as climate_router
+from routes.monsoon import router as monsoon_router
+from routes.extremes import router as extremes_router, drought_router
+from routes.scenario import router as scenario_router, sector_router
+from routes.advisor import build_advisor_router
 
-# Create a router with the /api prefix
-api_router = APIRouter(prefix="/api")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    try:
+        await ensure_seed_users(db)
+        logger.info("Seed users ensured.")
+    except Exception as e:
+        logger.warning(f"Seed users skipped: {e}")
+    yield
+    client.close()
 
 
-# Define Models
-class StatusCheck(BaseModel):
-    model_config = ConfigDict(extra="ignore")  # Ignore MongoDB's _id field
-    
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    client_name: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+app = FastAPI(title="Bharat Climate Twin API", version="1.0.0", lifespan=lifespan)
 
-class StatusCheckCreate(BaseModel):
-    client_name: str
+api = APIRouter(prefix="/api")
 
-# Add your routes to the router instead of directly to app
-@api_router.get("/")
+
+@api.get("/")
 async def root():
-    return {"message": "Hello World"}
+    return {"service": "Bharat Climate Twin", "status": "online"}
 
-@api_router.post("/status", response_model=StatusCheck)
-async def create_status_check(input: StatusCheckCreate):
-    status_dict = input.model_dump()
-    status_obj = StatusCheck(**status_dict)
-    
-    # Convert to dict and serialize datetime to ISO string for MongoDB
-    doc = status_obj.model_dump()
-    doc['timestamp'] = doc['timestamp'].isoformat()
-    
-    _ = await db.status_checks.insert_one(doc)
-    return status_obj
 
-@api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks():
-    # Exclude MongoDB's _id field from the query results
-    status_checks = await db.status_checks.find({}, {"_id": 0}).to_list(1000)
-    
-    # Convert ISO string timestamps back to datetime objects
-    for check in status_checks:
-        if isinstance(check['timestamp'], str):
-            check['timestamp'] = datetime.fromisoformat(check['timestamp'])
-    
-    return status_checks
+@api.get("/health")
+async def health():
+    return {
+        "status": "ok",
+        "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+        "timestamp_ist": datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=5, minutes=30))).isoformat(),
+        "data_sources": {
+            "nasa_power": "online",
+            "open_meteo": "online",
+            "era5_reanalysis": "online",
+            "imd_style": "online",
+        },
+        "ai_model": "claude-sonnet-4-6 via Emergent Universal LLM key",
+    }
 
-# Include the router in the main app
-app.include_router(api_router)
+
+# Mount sub-routers
+api.include_router(build_auth_router(db))
+api.include_router(climate_router)
+api.include_router(monsoon_router)
+api.include_router(extremes_router)
+api.include_router(drought_router)
+api.include_router(scenario_router)
+api.include_router(sector_router)
+api.include_router(build_advisor_router(db))
+
+app.include_router(api)
 
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_origins=os.environ.get("CORS_ORIGINS", "*").split(","),
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    client.close()

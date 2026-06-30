@@ -5,34 +5,34 @@
   },
   {
     "content": "Phase 2: Get ISRO Earth Observatory design guidelines via design_agent",
-    "status": "in_progress"
+    "status": "completed"
   },
   {
     "content": "Phase 2: Backend - climate service layer, India states data, snapshot/historical APIs",
-    "status": "pending"
+    "status": "completed"
   },
   {
     "content": "Phase 2: Frontend - dark mission-control shell, India map, climate panels",
-    "status": "pending"
+    "status": "completed"
   },
   {
     "content": "Phase 3: Monsoon tracker + Extreme weather + Drought early warning",
-    "status": "pending"
+    "status": "completed"
   },
   {
     "content": "Phase 4: Scenario simulator + Sector dashboards (Agri/Water/Urban/Energy)",
-    "status": "pending"
+    "status": "completed"
   },
   {
     "content": "Phase 5: AI Climate Advisor chat + data export + provenance",
-    "status": "pending"
+    "status": "completed"
   },
   {
     "content": "Phase 6: Multi-role auth + role routing + persistence",
-    "status": "pending"
+    "status": "completed"
   },
   {
-    "content": "Phase 7: Comprehensive end-to-end testing via testing_agent_v3",
-    "status": "pending"
+    "content": "Phase 7: Lint + Comprehensive end-to-end testing via testing_agent_v3",
+    "status": "in_progress"
   }
 ]
