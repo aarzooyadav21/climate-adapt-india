@@ -41,15 +41,20 @@ function FitBoundsOnce() {
 }
 
 export default function IndiaMap({ height = "60vh", layerOverride }) {
-  const { selectedState, setSelectedState, activeLayer } = useAppState();
+  const { selectedState, setSelectedState, activeLayer, resolution, setResolution } = useAppState();
   const uiLayer = layerOverride || activeLayer;
   const apiLayer = LAYER_API_KEY[uiLayer] || "temperature";
+  // District-level supports only direct-observation layers
+  const DISTRICT_LAYERS = ["temperature", "humidity", "wind", "precipitation"];
+  const districtSupported = DISTRICT_LAYERS.includes(apiLayer);
+  const effectiveResolution = (resolution === "district" && districtSupported) ? "district" : "state";
 
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
   const [geo, setGeo] = useState(null);
   const [gridPoints, setGridPoints] = useState([]);
   const [gridUnit, setGridUnit] = useState("");
+  const [districtCentroids, setDistrictCentroids] = useState([]);
 
   useEffect(() => {
     (async () => {
@@ -66,18 +71,34 @@ export default function IndiaMap({ height = "60vh", layerOverride }) {
     })();
   }, []);
 
+  // Fetch district centroids only when needed for cursor "nearest place" in district mode
+  useEffect(() => {
+    if (effectiveResolution === "district" && districtCentroids.length === 0) {
+      api.get("/districts/centroids").then(({ data }) => {
+        setDistrictCentroids(data.centroids || []);
+      }).catch(() => {});
+    }
+  }, [effectiveResolution, districtCentroids.length]);
+
   const onGridLoaded = useCallback((data) => {
     setGridPoints(data.points || []);
     setGridUnit(data.unit || "");
   }, []);
 
-  // Places for cursor "nearest" lookup — combine cities + states
+  // Places for cursor "nearest" lookup — combine cities + states + districts when available
   const places = useMemo(() => {
-    return [
+    const base = [
       ...cities.map((c) => ({ lat: c.lat, lon: c.lon, label: c.name })),
       ...states.map((s) => ({ lat: s.lat, lon: s.lon, label: s.name })),
     ];
-  }, [cities, states]);
+    if (effectiveResolution === "district" && districtCentroids.length) {
+      return [
+        ...districtCentroids.map((d) => ({ lat: d.lat, lon: d.lon, label: `${d.district}, ${d.state}` })),
+        ...base,
+      ];
+    }
+    return base;
+  }, [cities, states, districtCentroids, effectiveResolution]);
 
   // Style for state polygons — now subtle (heatmap shows the data)
   const geoStyle = useCallback((feature) => {
@@ -123,7 +144,7 @@ export default function IndiaMap({ height = "60vh", layerOverride }) {
         />
         <FitBoundsOnce />
         {/* Continuous heatmap */}
-        <HeatmapOverlay layer={apiLayer} onPointsLoaded={onGridLoaded} indiaGeoJSON={geo} />
+        <HeatmapOverlay layer={apiLayer} onPointsLoaded={onGridLoaded} indiaGeoJSON={geo} resolution={effectiveResolution} />
         {/* Subtle state outlines + click-to-select */}
         {geo && (
           <GeoJSON
@@ -149,11 +170,32 @@ export default function IndiaMap({ height = "60vh", layerOverride }) {
         <CursorInspector layer={apiLayer} points={gridPoints} places={places} />
       </MapContainer>
 
+      {/* Resolution toggle */}
+      <div data-testid="resolution-toggle" className="absolute top-3 right-3 z-[400] hud-panel px-1 py-1 flex items-center gap-1">
+        <button
+          data-testid="resolution-state"
+          onClick={() => setResolution("state")}
+          className={`px-2.5 py-1 rounded text-[10px] font-mono uppercase tracking-wider ${effectiveResolution === "state" ? "bg-[hsl(var(--primary)/0.18)] text-[hsl(var(--primary))]" : "text-muted-foreground hover:text-foreground"}`}
+        >
+          State
+        </button>
+        <button
+          data-testid="resolution-district"
+          onClick={() => setResolution("district")}
+          disabled={!districtSupported}
+          title={districtSupported ? "594 districts" : "District resolution available for temperature/humidity/wind/precipitation only"}
+          className={`px-2.5 py-1 rounded text-[10px] font-mono uppercase tracking-wider ${effectiveResolution === "district" ? "bg-[hsl(var(--primary)/0.18)] text-[hsl(var(--primary))]" : "text-muted-foreground hover:text-foreground"} disabled:opacity-40 disabled:cursor-not-allowed`}
+        >
+          District
+        </button>
+      </div>
+
       {/* Legend */}
-      <div data-testid="map-legend" className="absolute bottom-3 left-3 z-[400] hud-panel px-3 py-2 max-w-[300px]">
+      <div data-testid="map-legend" className="absolute bottom-3 left-3 z-[400] hud-panel px-3 py-2 max-w-[320px]">
         <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mb-1.5">
           Layer: <span className="text-foreground">{uiLayer}</span>
           {gridUnit && <span className="ml-2 text-[hsl(var(--primary))]">{gridUnit}</span>}
+          <span className="ml-2 text-[hsl(var(--india-saffron))]">· {effectiveResolution}-level</span>
         </div>
         <div className="flex h-2.5 rounded-sm overflow-hidden border border-border/60" style={{
           background: `linear-gradient(to right, ${ramp.map((s) => `rgb(${s.color.join(",")})`).join(",")})`

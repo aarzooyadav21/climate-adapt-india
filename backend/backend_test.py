@@ -481,6 +481,158 @@ class ClimateAPITester:
             validate_response=validate,
         )
 
+    # ========== PHASE 11: DISTRICT-LEVEL TESTS ==========
+    
+    def test_districts_centroids(self):
+        """Test GET /api/districts/centroids - should return 594 districts"""
+        def validate(data):
+            if "count" not in data:
+                return False, "Missing 'count' field"
+            if "centroids" not in data:
+                return False, "Missing 'centroids' array"
+            count = data.get("count", 0)
+            if count != 594:
+                return False, f"Expected 594 districts, got {count}"
+            centroids = data.get("centroids", [])
+            if len(centroids) != 594:
+                return False, f"Centroids array length mismatch: {len(centroids)}"
+            # Validate first centroid structure
+            if centroids:
+                required = ["district", "state", "lat", "lon"]
+                for field in required:
+                    if field not in centroids[0]:
+                        return False, f"Missing field in centroid: {field}"
+            return True, f"Retrieved {count} district centroids"
+
+        return self.run_test(
+            "Districts Centroids (All)",
+            "GET",
+            "districts/centroids",
+            200,
+            timeout=10,
+            validate_response=validate,
+        )
+
+    def test_districts_centroids_filtered(self, state: str = "Maharashtra"):
+        """Test GET /api/districts/centroids?state=Maharashtra - should filter correctly"""
+        def validate(data):
+            if "count" not in data or "centroids" not in data:
+                return False, "Missing count or centroids field"
+            count = data.get("count", 0)
+            centroids = data.get("centroids", [])
+            if count != len(centroids):
+                return False, f"Count mismatch: count={count}, array length={len(centroids)}"
+            # Maharashtra should have ~34 districts
+            if state.lower() == "maharashtra" and (count < 30 or count > 40):
+                return False, f"Expected ~34 districts for Maharashtra, got {count}"
+            # Verify all centroids are from the requested state
+            for c in centroids:
+                if c.get("state", "").lower() != state.lower():
+                    return False, f"Found district from wrong state: {c.get('state')}"
+            return True, f"Filtered {count} districts for {state}"
+
+        return self.run_test(
+            f"Districts Centroids (Filtered: {state})",
+            "GET",
+            f"districts/centroids?state={state}",
+            200,
+            timeout=10,
+            validate_response=validate,
+        )
+
+    def test_districts_geojson(self):
+        """Test GET /api/districts/geojson - should return FeatureCollection with 594 features"""
+        def validate(data):
+            if data.get("type") != "FeatureCollection":
+                return False, "Not a FeatureCollection"
+            features = data.get("features", [])
+            if len(features) != 594:
+                return False, f"Expected 594 features, got {len(features)}"
+            # Validate first feature structure
+            if features:
+                feat = features[0]
+                if feat.get("type") != "Feature":
+                    return False, "Invalid feature type"
+                if "geometry" not in feat or "properties" not in feat:
+                    return False, "Missing geometry or properties"
+            return True, f"GeoJSON with {len(features)} district polygons"
+
+        return self.run_test(
+            "Districts GeoJSON",
+            "GET",
+            "districts/geojson",
+            200,
+            timeout=10,
+            validate_response=validate,
+        )
+
+    def test_districts_grid_temperature(self):
+        """Test GET /api/districts/grid?layer=temperature - should return 594 points with °C unit"""
+        def validate(data):
+            required = ["layer", "unit", "count", "points", "provenance"]
+            for field in required:
+                if field not in data:
+                    return False, f"Missing field: {field}"
+            if data.get("layer") != "temperature":
+                return False, f"Layer mismatch: expected temperature, got {data.get('layer')}"
+            if data.get("unit") != "°C":
+                return False, f"Unit mismatch: expected °C, got {data.get('unit')}"
+            count = data.get("count", 0)
+            points = data.get("points", [])
+            # Allow some tolerance (may be slightly less than 594 if some API calls fail)
+            if count < 580 or count > 594:
+                return False, f"Expected ~594 points, got {count}"
+            if len(points) != count:
+                return False, f"Points array length mismatch: {len(points)} vs count {count}"
+            # Validate first point structure
+            if points:
+                p = points[0]
+                required_fields = ["lat", "lon", "value", "district", "state"]
+                for field in required_fields:
+                    if field not in p:
+                        return False, f"Missing field in point: {field}"
+            return True, f"District grid: {count} temperature points"
+
+        return self.run_test(
+            "Districts Grid (Temperature)",
+            "GET",
+            "districts/grid?layer=temperature",
+            200,
+            timeout=20,  # May take 8-15s on cold cache
+            validate_response=validate,
+        )
+
+    def test_districts_grid_humidity(self):
+        """Test GET /api/districts/grid?layer=humidity - should return 594 points with % unit"""
+        def validate(data):
+            if data.get("layer") != "humidity":
+                return False, f"Layer mismatch: expected humidity, got {data.get('layer')}"
+            if data.get("unit") != "%":
+                return False, f"Unit mismatch: expected %, got {data.get('unit')}"
+            count = data.get("count", 0)
+            if count < 580 or count > 594:
+                return False, f"Expected ~594 points, got {count}"
+            return True, f"District grid: {count} humidity points"
+
+        return self.run_test(
+            "Districts Grid (Humidity)",
+            "GET",
+            "districts/grid?layer=humidity",
+            200,
+            timeout=20,
+            validate_response=validate,
+        )
+
+    def test_districts_grid_invalid(self):
+        """Test GET /api/districts/grid?layer=invalid - should return 422"""
+        return self.run_test(
+            "Districts Grid (Invalid Layer)",
+            "GET",
+            "districts/grid?layer=invalid",
+            422,
+            timeout=5,
+        )
+
     def print_summary(self):
         """Print test summary"""
         print("\n" + "=" * 80)
@@ -576,6 +728,15 @@ def main():
     # 9. AI Advisor Tests
     print("\n--- AI ADVISOR TESTS ---")
     tester.test_advisor_chat("What is the monsoon state?", "KL")
+
+    # 10. PHASE 11: District-Level Tests
+    print("\n--- PHASE 11: DISTRICT-LEVEL TESTS ---")
+    tester.test_districts_centroids()
+    tester.test_districts_centroids_filtered("Maharashtra")
+    tester.test_districts_geojson()
+    tester.test_districts_grid_temperature()
+    tester.test_districts_grid_humidity()
+    tester.test_districts_grid_invalid()
 
     # Print summary
     tester.print_summary()

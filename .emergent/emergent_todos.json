@@ -1,26 +1,22 @@
 [
   {
-    "content": "Phase 10a: Backend farmer + policymaker endpoints",
+    "content": "Phase 10: Role-based experiences - 100% PASS",
     "status": "completed"
   },
   {
-    "content": "Phase 10b: Frontend FarmerHome (simple, action-oriented, no jargon)",
+    "content": "Phase 11a: Indian districts GeoJSON installed + processed (594 districts, 808KB simplified, 58KB centroids)",
     "status": "completed"
   },
   {
-    "content": "Phase 10c: Frontend PolicymakerHome (executive brief, risk cards)",
+    "content": "Phase 11b: Backend /api/districts/geojson + /centroids + /grid endpoints",
     "status": "completed"
   },
   {
-    "content": "Phase 10d: Role-based nav filtering + /app redirect",
+    "content": "Phase 11c: Frontend state/district resolution toggle + sharper IDW + district-level cursor inspector",
     "status": "completed"
   },
   {
-    "content": "Phase 10e: Testing role experiences end-to-end",
+    "content": "Phase 11d: Testing district feature end-to-end",
     "status": "in_progress"
-  },
-  {
-    "content": "Phase 11: District-level resolution (next)",
-    "status": "pending"
   }
 ]

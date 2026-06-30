@@ -113,24 +113,35 @@ export function colorForLayer(layer, value) {
   return interpColor(ramp, value);
 }
 
-export function HeatmapOverlay({ layer, onPointsLoaded, indiaGeoJSON }) {
+export function HeatmapOverlay({ layer, onPointsLoaded, indiaGeoJSON, resolution = "state" }) {
   const map = useMap();
   const [points, setPoints] = useState([]);
   const [unit, setUnit] = useState("");
   const [pngUrl, setPngUrl] = useState(null);
   const [bounds, setBounds] = useState(null);
 
-  // Fetch grid points
+  // Fetch grid points (state-level or district-level)
   useEffect(() => {
     let alive = true;
-    api.get("/climate/grid", { params: { layer } }).then(({ data }) => {
-      if (!alive) return;
-      setPoints(data.points || []);
-      setUnit(data.unit || "");
-      onPointsLoaded?.(data);
-    }).catch(() => {});
+    // District-level only supports a subset of layers
+    const districtSupported = ["temperature", "humidity", "wind", "precipitation"];
+    if (resolution === "district" && districtSupported.includes(layer)) {
+      api.get("/districts/grid", { params: { layer } }).then(({ data }) => {
+        if (!alive) return;
+        setPoints(data.points || []);
+        setUnit(data.unit || "");
+        onPointsLoaded?.(data);
+      }).catch(() => {});
+    } else {
+      api.get("/climate/grid", { params: { layer } }).then(({ data }) => {
+        if (!alive) return;
+        setPoints(data.points || []);
+        setUnit(data.unit || "");
+        onPointsLoaded?.(data);
+      }).catch(() => {});
+    }
     return () => { alive = false; };
-  }, [layer, onPointsLoaded]);
+  }, [layer, resolution, onPointsLoaded]);
 
   // Build a clipping mask path (India outline as a Path2D)
   const clipPath = useMemo(() => {
@@ -143,6 +154,10 @@ export function HeatmapOverlay({ layer, onPointsLoaded, indiaGeoJSON }) {
     if (!points.length) return;
     const minLat = 6.0, maxLat = 38.0, minLon = 67.0, maxLon = 98.0;
     const W = 360, H = 360;
+    // Higher resolution + sharper IDW when many points
+    const isDistrict = points.length > 300;
+    const idwPower = isDistrict ? 3.5 : 2.5;
+    const idwMaxDist = isDistrict ? 2.5 : 6.0;
     const canvas = document.createElement("canvas");
     canvas.width = W; canvas.height = H;
     const ctx = canvas.getContext("2d");
@@ -152,7 +167,7 @@ export function HeatmapOverlay({ layer, onPointsLoaded, indiaGeoJSON }) {
       const lat = maxLat - (y / H) * (maxLat - minLat);
       for (let x = 0; x < W; x++) {
         const lon = minLon + (x / W) * (maxLon - minLon);
-        const v = idw(points, lat, lon);
+        const v = idw(points, lat, lon, idwPower, idwMaxDist);
         const idx = (y * W + x) * 4;
         if (v === null) {
           img.data[idx + 3] = 0;
